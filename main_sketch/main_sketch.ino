@@ -18,27 +18,6 @@
  * then it corrects itself using simple logic.
  */
 
-#include <ArduinoBLE.h>
-
-// ------------------------
-// BLE UART Service Setup
-// Uses Nordic UART Service UUIDs (common BLE serial standard)
-// ------------------------
-BLEService uartService("6E400001-B5A3-F393-E0A9-E50E24DCCA9E");
-
-// TX characteristic (ESP32 → phone)
-BLECharacteristic txChar(
-  "6E400003-B5A3-F393-E0A9-E50E24DCCA9E",
-  BLERead | BLENotify,
-  20
-);
-
-// RX characteristic (phone → ESP32)
-BLECharacteristic rxChar(
-  "6E400002-B5A3-F393-E0A9-E50E24DCCA9E",
-  BLEWrite | BLEWriteWithoutResponse,
-  20
-);
 
 // LEDS for tracking BT and robot state
 // LED state control
@@ -105,15 +84,6 @@ void setup() {
   Serial.begin(9600);
   //while (!Serial);   // wait for serial to open
   delay(1000); //pause for serial connection
-  Serial.println("Starting ArduinoBLE UART...");
-
-  // ---- BLE Initialization ----
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, LOW);
-  if (!BLE.begin()) {
-    Serial.println("BLE begin failed!");
-    while (1);
-  }
 
   // robot state tracking leds
   pinMode(LED_R, OUTPUT);
@@ -125,21 +95,7 @@ void setup() {
   digitalWrite(LED_G, HIGH);
   digitalWrite(LED_B, HIGH);
 
-
-  BLE.setLocalName("HexBug_1");           // Name shown on your phone
-  BLE.setAdvertisedService(uartService);  // Advertise UART service
-
-  uartService.addCharacteristic(txChar);
-  uartService.addCharacteristic(rxChar);
-
-  BLE.addService(uartService);
-
-  // Send startup message to phone (optional)
-  txChar.writeValue((const uint8_t*)"READY", 5);
-
-  // Begin advertising
-  BLE.advertise();
-  Serial.println("BLE UART ready and advertising!");
+  setupBluetooth();
 }
 // ====================================================
 // LED/State Helper Functions
@@ -201,66 +157,15 @@ void updateRobotLED() {
 // Main Loop
 // ====================================================
 void loop() {
-  BLE.poll();   // keep BLE stack running smoothly
-
-  BLEDevice central = BLE.central();   // check if a phone is trying to connect
-
-  // No connection yet → blinking state
-  isConnected = central && central.connected();
+  pollBluetooth();
   updateBLELED();
+  updateRobotLED();
 
-  // If a phone connects:
-  if (central) {
-    Serial.print("Connected to: ");
-    Serial.println(central.address());
-    digitalWrite(LED_BUILTIN, HIGH); // signal on board if connected with bt
+  if (robotState == RUNNING)
+      startRobot();
+  else
+      stopRobot();
 
-    // Stay in this loop while connected
-    while (central.connected()) {
-      BLE.poll();
-
-      // Keep LED solid durring connection
-      isConnected = true;
-      updateBLELED();
-      updateRobotLED();
-
-      // --- Robot Behavior ---
-      if (robotState == RUNNING) {
-        startRobot();
-      } else {
-        stopRobot();
-      }
-
-      // --- BLE Command Processing ---
-      if (rxChar.written()) {
-        int len = rxChar.valueLength();
-        const uint8_t* data = rxChar.value();
-
-        for (int i = 0; i < len; i++) {
-          char c = (char)data[i];
-          Serial.print("RX: ");
-          Serial.println(c);
-
-          // 'S' = STOP command from phone
-          if (c == 'S') {
-            robotState = STOPPED;
-          }
-
-          // 'R' = RUN command from phone
-          if (c == 'R') {
-            robotState = RUNNING;
-          }
-        }
-      }
-    }
-
-    Serial.println("Phone disconnected.");
-    isConnected = false;
-    updateBLELED();
-    updateRobotLED();
-    //digitalWrite(LED_BUILTIN, LOW); // no longer connected to phone.
-
-  }
 }
 
 
