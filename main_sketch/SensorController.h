@@ -12,12 +12,22 @@ public:
 
 private:
 
-    //SensorCallback _callback;
+  
     int _threshold = 1800;
     unsigned long _lastRead = 0;
     const unsigned long _pollInterval = 20; // 50 Hz
 
-    long readUltrasonic();
+    long _ultrasonicDuration;
+    long _ultrasonicDistance;
+    bool usO;
+    void readUltrasonic();
+
+    bool irR;
+    bool irM;
+    bool irL;
+    bool irC;
+    void readIR();
+
 
 };
 
