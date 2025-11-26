@@ -19,7 +19,10 @@
  */
 #include "globals.h"
 #include "BleController.h"
+#include "SensorController.h"
+
 BleController ble;
+SensorController sensors;
 
 // ====================================================
 // Bluetooth Callbacks
@@ -61,6 +64,9 @@ void setup() {
   initPins();
   initLEDs();
 
+  sensors.begin();
+  sensors.setThreshold(1800);
+
   ble.begin();
   ble.setCommandCallback(onBleCommand);
   ble.setConnectCallback(onBleConnect);
@@ -71,6 +77,7 @@ void setup() {
 // Main Loop
 // ====================================================
 void loop() {
+  sensors.poll();
   ble.poll();
   updateLED();
 }

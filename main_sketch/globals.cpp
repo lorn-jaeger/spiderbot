@@ -18,8 +18,9 @@ void initPins() {
     pinMode(leftTurnPin, OUTPUT);
     pinMode(rightTurnPin, OUTPUT);
 
-    pinMode(irLeftPin, INPUT);
-    pinMode(irRightPin, INPUT);
+    pinMode(obstacleEchoPin, INPUT);
+    pinMode(obstacleTrigPin, OUTPUT);
+    digitalWrite(obstacleTrigPin, LOW);
 }
 
 void initLEDs() {
