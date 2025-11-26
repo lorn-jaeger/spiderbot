@@ -11,6 +11,7 @@ void initPins() {
     pinMode(LED_R, OUTPUT);
     pinMode(LED_G, OUTPUT);
     pinMode(LED_B, OUTPUT);
+    pinMode(LED_BUILTIN, OUTPUT);
 
     pinMode(forwardPin, OUTPUT);
     pinMode(backwardPin, OUTPUT);
