@@ -17,11 +17,10 @@
  * The robot drives forward until the IR sensors detect a line or boundary,
  * then it corrects itself using simple logic.
  */
-
-
+#include "globals.h"
 // LEDS for tracking BT and robot state
 // LED state control
-bool isConnected = false;
+//bool isConnected = false;
 unsigned long lastBlinkTime = 0;
 bool ledState = LOW;
 const int BLINK_INTERVAL = 300;  // ms
@@ -55,14 +54,6 @@ bool doRightTurn;
 bool isLost;
 
 int timeDelay = 250;   // small delay for movement timing
-
-// Robot state machine
-enum RobotState {
-  STOPPED,
-  RUNNING
-};
-
-RobotState robotState = STOPPED;
 
 
 
@@ -102,7 +93,7 @@ void setup() {
 // ====================================================
 
 void updateBLELED() {
-  if (isConnected) {
+  if (isConnectedBLE) {
     // SOLID ON when connected
     digitalWrite(LED_BUILTIN, HIGH);
   } else {
@@ -125,12 +116,12 @@ void setLED(bool r, bool g, bool b) {
 
 void updateRobotLED() {
 
-  if (!isConnected){
+  if (!isConnectedBLE){
     setLED(false, false, false);
     return;
   }
 
-  if (robotState == STOPPED) {
+  if (currentState == IDLE) {
     // STOPPED = RED
     setLED(true, false, false);
     return;
@@ -160,11 +151,6 @@ void loop() {
   pollBluetooth();
   updateBLELED();
   updateRobotLED();
-
-  if (robotState == RUNNING)
-      startRobot();
-  else
-      stopRobot();
 
 }
 

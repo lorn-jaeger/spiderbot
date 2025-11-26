@@ -1,6 +1,5 @@
 // bluetooth.ino
-#include <ArduinoBLE.h>
-
+#include "globals.h"
 BLEService uartService("6E400001-B5A3-F393-E0A9-E50E24DCCA9E");
 
 BLECharacteristic txChar(
@@ -16,8 +15,31 @@ BLECharacteristic rxChar(
 );
 
 // Exposed state so main program can read commands
-extern bool isConnected;
-extern RobotState robotState;
+//extern bool isConnected;
+
+void onConnect(BLEDevice central) {
+    Serial.println("[BLE EVENT] Device connected!");
+    isConnectedBLE = true;
+}
+
+void onDisconnect(BLEDevice central) {
+    Serial.println("[BLE EVENT] Device disconnected.");
+    isConnectedBLE = false;
+}
+// --------------------------
+// Event-driven RX callback
+// --------------------------
+void onRXWrite(BLEDevice central, BLECharacteristic characteristic) {
+    int len = characteristic.valueLength();
+    const uint8_t* data = characteristic.value();
+
+    for (int i = 0; i < len; i++) {
+        char c = (char)data[i];
+        Serial.print("[BLE EVENT] RX: ");
+        Serial.println(c);
+      //TODO: Implement bot inital states
+    }
+}
 
 // Forward declarations
 void setupBluetooth() {
@@ -32,29 +54,21 @@ void setupBluetooth() {
   uartService.addCharacteristic(txChar);
   uartService.addCharacteristic(rxChar);
   BLE.addService(uartService);
+  
+  rxChar.setEventHandler(BLEWritten, onRXWrite);
+  BLE.setEventHandler(BLEConnected, onConnect);
+  BLE.setEventHandler(BLEDisconnected, onDisconnect);
+
 
   BLE.advertise();
   Serial.println("BLE advertising...");
 }
 
+
 void pollBluetooth() {
   BLE.poll();
 
   BLEDevice central = BLE.central();
-  isConnected = central && central.connected();
+  isConnectedBLE = central && central.connected();
 
-  if (central) {
-    while (central.connected()) {
-      BLE.poll();
-
-      if (rxChar.written()) {
-        for (int i = 0; i < rxChar.valueLength(); i++) {
-          char c = (char)rxChar.value()[i];
-
-          if (c == 'R') robotState = RUNNING;
-          if (c == 'S') robotState = STOPPED;
-        }
-      }
-    }
-  }
 }
