@@ -4,14 +4,26 @@
 RobotState currentState = IDLE;
 
 // BLE objects
-//BLEService robotService("180F");
 bool isConnectedBLE = false;
-//BLEStringCharacteristic rxChar("2A19", BLEWrite, 20);
 
-// Sensor globals
-//int irLeft = 0;
-//int irMid = 0;
-//int irRight = 0;
+// Initialization Functions
+void initPins() {
+    pinMode(LED_R, OUTPUT);
+    pinMode(LED_G, OUTPUT);
+    pinMode(LED_B, OUTPUT);
 
-//bool crosswalkDetected = false;
-//bool obstacleDetected = false;
+    pinMode(forwardPin, OUTPUT);
+    pinMode(backwardPin, OUTPUT);
+    pinMode(leftTurnPin, OUTPUT);
+    pinMode(rightTurnPin, OUTPUT);
+
+    pinMode(irLeftPin, INPUT);
+    pinMode(irRightPin, INPUT);
+}
+
+void initLEDs() {
+    // ACTIVE-LOW LEDs → OFF means HIGH
+    digitalWrite(LED_R, HIGH);
+    digitalWrite(LED_G, HIGH);
+    digitalWrite(LED_B, HIGH);
+}

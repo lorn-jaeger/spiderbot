@@ -8,6 +8,30 @@
 #include <ArduinoBLE.h>
 
 // ---------------------------
+// Pin Declarations
+// ---------------------------
+#define LED_R 14
+#define LED_G 15
+#define LED_B 16
+
+  // ----------------------------------------------------
+  // Motor Control Pins (depends on your motor controller)
+  // LOW  = activate
+  // HIGH = stop
+  // ----------------------------------------------------
+#define backwardPin 2
+#define forwardPin 3
+#define leftTurnPin 4
+#define rightTurnPin 5
+
+  // ----------------------------------------------------
+  // IR Line Tracking Sensor Pins
+  // These read HIGH/LOW based on reflectivity
+  // ----------------------------------------------------
+#define irLeftPin 8
+#define irRightPin 7
+
+// ---------------------------
 // Robot State Machine
 // ---------------------------
 enum RobotState {
@@ -26,26 +50,11 @@ extern RobotState currentState;
 // ---------------------------
 // BLE Globals
 // ---------------------------
-//extern BLEService robotService;
-//extern BLEStringCharacteristic rxChar;
 extern bool isConnectedBLE;
 
 // ---------------------------
-// Sensor Values (shared)
+// Initialization functions
 // ---------------------------
-//extern int irLeft;
-//extern int irMid;
-//extern int irRight;
-//extern bool crosswalkDetected;
-//extern bool obstacleDetected;
-
-// ---------------------------
-// Function Prototypes
-// (optional but recommended)
-// ---------------------------
-//void bluetoothSetup();
-//void onConnect(BLEDevice central);
-//void onDisconnect(BLEDevice central);
-//void onRXWrite(BLEDevice central, BLECharacteristic characteristic);
-
+void initPins();
+void initLEDs();
 #endif // GLOBALS_H
