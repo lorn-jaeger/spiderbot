@@ -1,0 +1,80 @@
+digraph HexWalker {
+    rankdir=TB;
+    node [shape=rectangle, style=rounded, fontsize=12];
+
+    Start [shape=oval, label="Start"];
+    Init [label="Initialize Sensors & Motors"];
+    Sense [label="Read Sensors:\nIR(L,M,R), Crosswalk(C), Obstacle(O)"];
+
+    // Priority safety checks
+    Obstacle [shape=diamond, label="Obstacle Detected (O=1)?"];
+    Stop [label="STOP & Avoid / Wait"];
+
+    Crosswalk [shape=diamond, label="Crosswalk Detected (C=1)?"];
+    HandleCross [label="Crosswalk Routine:\nSlow Down → Wait → Resume"];
+
+    // Intersection check
+    Intersection [shape=diamond, label="Intersection?\n(M=1 AND (L=1 OR R=1))"];
+    HandleIntersection [label="Intersection Routine:\nChoose Path\n(Left/Right/Rule)"];
+
+    // Line following logic
+    LineDecision [shape=diamond, label="Line Pattern (L,M,R)?"];
+
+    HardLeft [label="Left Curve:\nL=1, M=0, R=0"];
+    //DriftLeft [label="Slight Left:\nL=1, M=1, R=0"];
+    Forward [label="Forward:\nL=0, M=1, R=0"];
+    //DriftRight [label="Slight Right:\nL=0, M=1, R=1"];
+    HardRight [label="Right Curve:\nL=0, M=0, R=1"];
+
+    // No line state
+    Lost [label="No Line:\nSearch / Sweep"];
+
+    // End of road
+    EndRoad [shape=diamond, label="All Sensors = 0?\nL=0,M=0,R=0\nC=0,O=0"];
+    TurnAround [label="End of Road:\n180° Turn"];
+
+    Loop [shape=oval, label="Loop Back"];
+
+    // Flow connections
+    Start -> Init -> Sense;
+
+    Sense -> Obstacle;
+    Obstacle -> Stop [label="Yes"];
+    Stop -> Sense;
+    Obstacle -> Crosswalk [label="No"];
+
+    Crosswalk -> HandleCross [label="Yes"];
+    HandleCross -> Sense;
+    Crosswalk -> Intersection [label="No"];
+
+    Intersection -> HandleIntersection [label="Yes"];
+    HandleIntersection -> Sense;
+    Intersection -> LineDecision [label="No"];
+
+    // Line pattern branching
+    LineDecision -> HardLeft [label="100"];
+    //LineDecision -> DriftLeft [label="110"];
+    LineDecision -> Forward [label="010"];
+    //LineDecision -> DriftRight [label="011"];
+    LineDecision -> HardRight [label="001"];
+    LineDecision -> Lost [label="Else"];
+
+    // End-of-road detection
+    Lost -> EndRoad;
+    EndRoad -> TurnAround [label="Yes"];
+    EndRoad -> Sense [label="No"];
+
+    // Looping states
+    HardLeft -> Loop;
+    //DriftLeft -> Loop;
+    Forward -> Loop;
+    //DriftRight -> Loop;
+    HardRight -> Loop;
+    Lost -> Loop;
+    TurnAround -> Loop;
+
+    Loop -> Sense;
+}
+
+
+
