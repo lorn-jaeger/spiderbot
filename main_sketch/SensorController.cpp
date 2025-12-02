@@ -1,20 +1,12 @@
 #include "SensorController.h"
 
-// Pull pin globals from globals.cpp
-//extern int irLeftPin;
-//extern int irMiddlePin;
-//extern int irRightPin;
-//extern int crosswalkPin;
-//extern int obstaclePin;
 
 const int ULTRASONIC_DISTANCE_THRESHOLD = 10; // in cm
 
 
 extern RobotState currentState;   // global robot state variable
 
-void SensorController::begin() {
-    //pinMode(CROSSWALK_PIN, INPUT);
-    //pinMode(OBSTACLE_PIN, INPUT);
+void SensorController::begin() { 
 
     // IR sensors are analog — no pinMode needed
     _ultrasonicDuration = -1;
