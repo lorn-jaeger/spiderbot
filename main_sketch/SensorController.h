@@ -12,8 +12,16 @@ public:
 
 private:
 
+    struct IRSensorState {
+        float smoothValue = 0.0f;
+        bool onLine = false;
+        bool initialized = false;
+    };
+
   
-    int _threshold = 1800;
+    int _thresholdLow = 300;
+    int _thresholdHigh = 700;
+    const float _alpha = 0.3f;
     unsigned long _lastRead = 0;
     const unsigned long _pollInterval = 20; // 50 Hz
 
@@ -26,7 +34,13 @@ private:
     bool irM;
     bool irL;
     bool irC;
+    IRSensorState _leftSensor;
+    IRSensorState _middleSensor;
+    IRSensorState _rightSensor;
+    IRSensorState _crosswalkSensor;
     void readIR();
+
+    bool updateIRSensor(IRSensorState &sensor, int pin);
 
 
 };

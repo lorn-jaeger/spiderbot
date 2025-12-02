@@ -17,10 +17,10 @@ void SensorController::begin() {
     irL = false;
     irC = false;
     usO = false;
-}
-
-void SensorController::setThreshold(int threshold) {
-    _threshold = threshold;
+    _leftSensor = IRSensorState();
+    _middleSensor = IRSensorState();
+    _rightSensor = IRSensorState();
+    _crosswalkSensor = IRSensorState();
 }
 
 void SensorController::readUltrasonic(){
@@ -48,16 +48,34 @@ void SensorController::readUltrasonic(){
 }
 
 void SensorController::readIR(){
-  int L_raw = analogRead(irLeftPin);
-  int M_raw = analogRead(irMiddlePin);
-  int R_raw = analogRead(irRightPin);
-  int crosswalk_raw = analogRead(crosswalkPin);
+  irL = updateIRSensor(_leftSensor, irLeftPin);
+  irM = updateIRSensor(_middleSensor, irMiddlePin);
+  irR = updateIRSensor(_rightSensor, irRightPin);
+  irC = updateIRSensor(_crosswalkSensor, crosswalkPin);
 
-  irL = L_raw > _threshold;
-  irM = M_raw > _threshold;
-  irR = R_raw > _threshold;
-  irC = crosswalk_raw > _threshold;
+}
 
+bool SensorController::updateIRSensor(IRSensorState &sensor, int pin) {
+    int rawValue = analogRead(pin);
+
+    if (!sensor.initialized) {
+        sensor.smoothValue = rawValue;
+        sensor.initialized = true;
+    } else {
+        sensor.smoothValue = _alpha * rawValue + (1.0f - _alpha) * sensor.smoothValue;
+    }
+
+    if (sensor.onLine) {
+        if (sensor.smoothValue > _thresholdHigh) {
+            sensor.onLine = false;
+        }
+    } else {
+        if (sensor.smoothValue < _thresholdLow) {
+            sensor.onLine = true;
+        }
+    }
+
+    return sensor.onLine;
 }
 
 void SensorController::poll() {
