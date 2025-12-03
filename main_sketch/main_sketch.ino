@@ -65,7 +65,6 @@ void setup() {
   initLEDs();
 
   sensors.begin();
-  sensors.setThreshold(1800);
 
   ble.begin();
   ble.setCommandCallback(onBleCommand);

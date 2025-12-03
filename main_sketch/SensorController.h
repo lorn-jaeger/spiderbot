@@ -8,7 +8,6 @@ class SensorController {
 public:
     void begin();
     void poll();
-    void setThreshold(int threshold);
 
 private:
 
