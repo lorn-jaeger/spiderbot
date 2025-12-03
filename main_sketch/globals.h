@@ -51,7 +51,7 @@ enum RobotState {
 };
 
 extern RobotState currentState;
-
+extern bool robotReady;
 // ---------------------------
 // BLE Globals
 // ---------------------------

@@ -28,19 +28,17 @@ SensorController sensors;
 // Bluetooth Callbacks
 // ====================================================
 void onBleCommand(char c) {
-    switch (c) {
-        case 'R': currentState = FOLLOW_LINE; break;
-        case 'S': currentState = IDLE; break;
-        case 'O': currentState = OBSTACLE_STOP; break;
-        case 'I': currentState = INTERSECTION; break;
-        case 'C': currentState = CROSSWALK; break;
-        case 'E': currentState = END_OF_ROAD_TURN; break;
-        case 'l': currentState = TURN_LEFT; break;
-        case 'r': currentState = TURN_RIGHT; break;
+
+    Serial.print("[BLE] New BLE Command: ");
+    Serial.print(c);
+
+    if(c == 'R'){
+      robotReady = true;
     }
 
-    Serial.print("[STATE] New Robot State: ");
-    Serial.println(currentState);
+    if(c == 'S'){
+      robotReady = false;
+    }
 }
 void onBleConnect() {
     Serial.println("[BLE] Device Connected.");
@@ -74,7 +72,7 @@ void setup() {
 // Main Loop
 // ====================================================
 void loop() {
-  if (isConnectedBLE){
+  if (isConnectedBLE && robotReady){
     sensors.poll();
   }else{
     currentState = IDLE;

@@ -1,7 +1,8 @@
 #include "globals.h"
 
-// Create actual storage for globals
+// Robot objects
 RobotState currentState = IDLE;
+bool robotReady = false;
 
 // BLE objects
 bool isConnectedBLE = false;
