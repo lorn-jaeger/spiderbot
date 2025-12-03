@@ -20,9 +20,11 @@
 #include "globals.h"
 #include "BleController.h"
 #include "SensorController.h"
+#include "RobotController.h"
 
 BleController ble;
 SensorController sensors;
+RobotController robot;
 
 // ====================================================
 // Bluetooth Callbacks
@@ -66,6 +68,8 @@ void setup() {
   ble.setCommandCallback(onBleCommand);
   ble.setConnectCallback(onBleConnect);
   ble.setDisconnectCallback(onBleDisconnect);
+
+  robot.begin();
 }
 
 // ====================================================
@@ -77,7 +81,10 @@ void loop() {
   }else{
     currentState = IDLE;
   }
+
+  robot.poll();
   
   ble.poll();
   updateLED();
+  lastState = currentState;
 }

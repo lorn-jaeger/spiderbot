@@ -2,6 +2,7 @@
 
 // Robot objects
 RobotState currentState = IDLE;
+RobotState lastState = IDLE;
 bool robotReady = false;
 
 // BLE objects

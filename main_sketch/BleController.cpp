@@ -1,4 +1,5 @@
 #include "BleController.h"
+#include "globals.h"
 
 BleController::BleController()
     : uartService("6E400001-B5A3-F393-E0A9-E50E24DCCA9E"),
@@ -31,6 +32,12 @@ void BleController::begin() {
     Serial.println("BLE now advertising...");
 }
 
+void BleController::send(String msg) {
+    if (!isConnected) return;  // no phone → don’t send
+
+    txChar.writeValue((const uint8_t*)msg.c_str(), msg.length());
+}
+
 void BleController::poll() {
     BLEDevice central = BLE.central();
 
@@ -44,6 +51,7 @@ void BleController::poll() {
 
         updateLED();
         handleRX();
+        handleTX();
     }
     else {
         if (isConnected) {
@@ -70,8 +78,6 @@ void BleController::handleRX() {
         // Skip junk characters
         if (c == '\r' || c == '\n' || c == '\0') continue;
 
-        Serial.print("[BLE COMMAND] Received: ");
-        Serial.println(c);
 
         if (onCommand) {
             onCommand(c);
@@ -79,6 +85,11 @@ void BleController::handleRX() {
     }
 }
 
+void BleController::handleTX(){
+    if(currentState != lastState){
+        send(robotStateToString());
+    }
+}
 void BleController::updateLED() {
     // ON when connected, slow blink when not
     if (isConnected) {
@@ -90,6 +101,19 @@ void BleController::updateLED() {
             last = now;
             digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
         }
+    }
+}
+char* BleController::robotStateToString() {
+    switch (currentState) {
+        case IDLE:             return "IDLE\n";
+        case FOLLOW_LINE:      return "FOLLOW_LINE\n";
+        case TURN_LEFT:        return "TURN_LEFT\n";
+        case TURN_RIGHT:       return "TURN_RIGHT\n";
+        case INTERSECTION:     return "INTERSECTION\n";
+        case CROSSWALK:        return "CROSSWALK\n";
+        case OBSTACLE_STOP:    return "OBSTACLE_STOP\n";
+        case END_OF_ROAD_TURN: return "END_OF_ROAD_TURN\n";
+        default:               return "UNKNOWN\n";
     }
 }
 

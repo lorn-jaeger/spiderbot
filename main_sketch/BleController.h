@@ -13,6 +13,7 @@ public:
 
     void begin();
     void poll();
+    void send(String msg);
 
     void setCommandCallback(BleCommandCallback cb);
     void setConnectCallback(BleConnectCallback cb);
@@ -30,7 +31,9 @@ private:
     
     bool isConnected = false;
     void handleRX();
+    void handleTX();
     void updateLED();
+    char* robotStateToString();
 };
 
 #endif
