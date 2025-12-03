@@ -51,7 +51,7 @@ void SensorController::readIR(){
   irL = updateIRSensor(_leftSensor, irLeftPin);
   irM = updateIRSensor(_middleSensor, irMiddlePin);
   irR = updateIRSensor(_rightSensor, irRightPin);
-  irC = updateIRSensor(_crosswalkSensor, crosswalkPin);
+  //irC = updateIRSensor(_crosswalkSensor, crosswalkPin);
 
 }
 
@@ -82,7 +82,7 @@ void SensorController::poll() {
     unsigned long now = millis();
     if (now - _lastRead < _pollInterval) return;
     _lastRead = now;
-
+    //Serial.println("polling sensor data...");
     // === Read sensors ===
     readIR();
     readUltrasonic();
@@ -102,16 +102,17 @@ void SensorController::poll() {
     }
 
     // Intersection (all three)
-    if (irL && irM && irR) {
+    if ((irL && irM && irR) || (irL && irM && !irR) || (!irL && irM && irR)) {
         currentState = INTERSECTION;
         return;
     }
+
 
     // Turns
     if (irL && !irM && !irR) {
         currentState = TURN_LEFT;
         return;
-    }
+    }  
 
     if (irR && !irM && !irL) {
         currentState = TURN_RIGHT;

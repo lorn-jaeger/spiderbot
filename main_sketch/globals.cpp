@@ -8,19 +8,27 @@ bool isConnectedBLE = false;
 
 // Initialization Functions
 void initPins() {
+    //Internal LED pins
     pinMode(LED_R, OUTPUT);
     pinMode(LED_G, OUTPUT);
     pinMode(LED_B, OUTPUT);
     pinMode(LED_BUILTIN, OUTPUT);
 
+    // Robot Controller pins
     pinMode(forwardPin, OUTPUT);
     pinMode(backwardPin, OUTPUT);
     pinMode(leftTurnPin, OUTPUT);
     pinMode(rightTurnPin, OUTPUT);
 
+    // Ultra Sonic Pins
     pinMode(obstacleEchoPin, INPUT);
     pinMode(obstacleTrigPin, OUTPUT);
     digitalWrite(obstacleTrigPin, LOW);
+
+    // IR pins
+    pinMode(irLeftPin, INPUT);
+    pinMode(irMiddlePin, INPUT);
+    pinMode(irRightPin, INPUT);
 }
 
 void initLEDs() {

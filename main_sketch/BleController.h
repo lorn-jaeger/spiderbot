@@ -27,8 +27,8 @@ private:
     BleConnectCallback onConnect = nullptr;
     BleDisconnectCallback onDisconnect = nullptr;
 
+    
     bool isConnected = false;
-
     void handleRX();
     void updateLED();
 };

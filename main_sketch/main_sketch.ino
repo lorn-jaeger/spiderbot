@@ -45,13 +45,11 @@ void onBleCommand(char c) {
 void onBleConnect() {
     Serial.println("[BLE] Device Connected.");
     isConnectedBLE = true;
-    currentState = IDLE;
 }
 
 void onBleDisconnect() {
     Serial.println("[BLE] Device Disconnected.");
     isConnectedBLE = false;
-    currentState = IDLE;
 }
 
 // ====================================================
@@ -76,7 +74,12 @@ void setup() {
 // Main Loop
 // ====================================================
 void loop() {
-  sensors.poll();
+  if (isConnectedBLE){
+    sensors.poll();
+  }else{
+    currentState = IDLE;
+  }
+  
   ble.poll();
   updateLED();
 }
