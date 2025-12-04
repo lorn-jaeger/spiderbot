@@ -2,6 +2,7 @@
 
 
 const int ULTRASONIC_DISTANCE_THRESHOLD = 10; // in cm
+const bool LINE_IS_DARK = true;  // set false if line is lighter than floor
 
 
 extern RobotState currentState;   // global robot state variable
@@ -52,12 +53,6 @@ void SensorController::readIR(){
     irM = updateIRSensor(_middleSensor, irMiddlePin);
     irR = updateIRSensor(_rightSensor, irRightPin);
     //irC = updateIRSensor(_crosswalkSensor, crosswalkPin);
-    Serial.print("IR L:");
-    Serial.print(irL ? 1 : 0);
-    Serial.print(" M:");
-    Serial.print(irM ? 1 : 0);
-    Serial.print(" R:");
-    Serial.println(irR ? 1 : 0);
 }
 
 bool SensorController::updateIRSensor(IRSensorState &sensor, int pin) {
@@ -96,39 +91,68 @@ void SensorController::poll() {
     readUltrasonic();
 
     static unsigned long lastLog = 0;
-    if (now - lastLog > 200) {
+    if (now - lastLog > 300) {
         lastLog = now;
-        Serial.print("IR L=");
-        Serial.print(_leftSensor.smoothValue);
-        Serial.print(" M=");
-        Serial.print(_middleSensor.smoothValue);
-        Serial.print(" R=");
-        Serial.print(_rightSensor.smoothValue);
-        Serial.print(" | flags L");
-        Serial.print(irL);
-        Serial.print(" M");
-        Serial.print(irM);
-        Serial.print(" R");
-        Serial.print(irR);
+        Serial.print("[IR] L=");
+        Serial.print(_leftSensor.smoothValue, 1);
+        Serial.print(irL ? " (ON)" : " (  )");
+        Serial.print("  M=");
+        Serial.print(_middleSensor.smoothValue, 1);
+        Serial.print(irM ? " (ON)" : " (  )");
+        Serial.print("  R=");
+        Serial.print(_rightSensor.smoothValue, 1);
+        Serial.print(irR ? " (ON)" : " (  )");
         Serial.print(" | US=");
-        Serial.println(_ultrasonicDistance);
+        Serial.print(_ultrasonicDistance);
+        Serial.println("cm");
     }
 
-    // === Simple line-only state logic ===
-    // 1) If center sees the line, keep moving forward in short steps.
-    // 2) If center is off but a side sees the line, pivot toward that side.
-    // 3) If nothing is seen, slow search turn to the left to reacquire.
+    // === Simple line-only state logic with noise handling ===
+    // 1) If center sees the line, keep moving forward.
+    // 2) If center is off but a side looks most like the line, pivot that way.
+    // 3) If nothing is clear, continue the last turn direction to avoid ping-pong.
+    static int lastDir = -1; // -1 left, 1 right, 0 center/unknown
+
+    // Score helpers (lower is better when line is dark, higher is better when bright)
+    auto score = [](float v, bool dark) {
+        return dark ? v : -v;
+    };
+
+    float sL = score(_leftSensor.smoothValue, LINE_IS_DARK);
+    float sM = score(_middleSensor.smoothValue, LINE_IS_DARK);
+    float sR = score(_rightSensor.smoothValue, LINE_IS_DARK);
+
     if (irM) {
         currentState = FOLLOW_LINE;
-    } else if (irL && !irR) {
-        currentState = TURN_LEFT;
-    } else if (irR && !irL) {
-        currentState = TURN_RIGHT;
-    } else if (irL && irR) {
-        currentState = FOLLOW_LINE;  // rare case, treat as centered
-    } else {
-        currentState = TURN_LEFT;    // default search turn
+        lastDir = 0;
+        return;
     }
 
+    // One side sees the line → steer that way
+    if (irL && !irR) {
+        currentState = TURN_LEFT;
+        lastDir = -1;
+        return;
+    }
+    if (irR && !irL) {
+        currentState = TURN_RIGHT;
+        lastDir = 1;
+        return;
+    }
+
+    // No clean detections: compare which side looks more "line-like"
+    if (!irL && !irR) {
+        int bestDir = (sL < sR) ? -1 : 1;
+        if (lastDir != 0) {
+            bestDir = lastDir; // stick with previous lean to avoid flip-flop
+        }
+        currentState = (bestDir < 0) ? TURN_LEFT : TURN_RIGHT;
+        lastDir = bestDir;
+        return;
+    }
+
+    // Both side sensors think they're on the line (likely noise) → treat as centered
+    currentState = FOLLOW_LINE;
+    lastDir = 0;
 
 }

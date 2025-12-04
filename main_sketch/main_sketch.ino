@@ -82,26 +82,43 @@ void loop() {
     currentState = IDLE;
   }
 
-  // Log state transitions with sensor context for debugging
+  // Log state transitions with sensor context for debugging (human-friendly)
   static RobotState lastLoggedState = IDLE;
   if (currentState != lastLoggedState) {
     Serial.print("[STATE] ");
     Serial.print(stateToString(currentState));
-    Serial.print(" | IR L:");
-    Serial.print(sensors.leftOnLine());
-    Serial.print(" M:");
-    Serial.print(sensors.middleOnLine());
-    Serial.print(" R:");
-    Serial.print(sensors.rightOnLine());
-    Serial.print(" | IRv L:");
-    Serial.print(sensors.leftValue(), 1);
-    Serial.print(" M:");
-    Serial.print(sensors.middleValue(), 1);
-    Serial.print(" R:");
-    Serial.print(sensors.rightValue(), 1);
-    Serial.print(" | US:");
-    Serial.println(sensors.ultrasonicDistance());
+    Serial.print(" | IR L=");
+    Serial.print(sensors.leftValue(), 0);
+    Serial.print(sensors.leftOnLine() ? " (on)" : " (off)");
+    Serial.print(" M=");
+    Serial.print(sensors.middleValue(), 0);
+    Serial.print(sensors.middleOnLine() ? " (on)" : " (off)");
+    Serial.print(" R=");
+    Serial.print(sensors.rightValue(), 0);
+    Serial.print(sensors.rightOnLine() ? " (on)" : " (off)");
+    Serial.print(" | US=");
+    Serial.print(sensors.ultrasonicDistance());
+    Serial.println(" cm");
     lastLoggedState = currentState;
+  }
+
+  // Periodic sensor-only log to see values even without state changes
+  static unsigned long lastSensorPrint = 0;
+  unsigned long now = millis();
+  if (now - lastSensorPrint > 500) {
+    lastSensorPrint = now;
+    Serial.print("[SENSE] L=");
+    Serial.print(sensors.leftValue(), 1);
+    Serial.print(sensors.leftOnLine() ? " (on)" : " (off)");
+    Serial.print(" | M=");
+    Serial.print(sensors.middleValue(), 1);
+    Serial.print(sensors.middleOnLine() ? " (on)" : " (off)");
+    Serial.print(" | R=");
+    Serial.print(sensors.rightValue(), 1);
+    Serial.print(sensors.rightOnLine() ? " (on)" : " (off)");
+    Serial.print(" | US=");
+    Serial.print(sensors.ultrasonicDistance());
+    Serial.println(" cm");
   }
 
   robot.poll();
