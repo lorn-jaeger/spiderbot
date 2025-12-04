@@ -1,15 +1,5 @@
-// ====================================================
-// Motor Movement Helper Functions
-// ====================================================
-
-enum Motion {
-  MOTION_STOP,
-  MOTION_FORWARD,
-  MOTION_FORWARD_LEFT,
-  MOTION_FORWARD_RIGHT,
-  MOTION_TURN_LEFT,
-  MOTION_TURN_RIGHT,
-};
+#include "globals.h"
+#include "robot.h"
 
 Motion currentMotion = MOTION_STOP;
 

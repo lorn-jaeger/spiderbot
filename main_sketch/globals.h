@@ -19,10 +19,10 @@
   // LOW  = activate
   // HIGH = stop
   // ----------------------------------------------------
-#define backwardPin D4
-#define forwardPin D5
-#define leftTurnPin D6
-#define rightTurnPin D7
+#define backwardPin 4
+#define forwardPin 5
+#define leftTurnPin 6
+#define rightTurnPin 7
 
   // ----------------------------------------------------
   // IR Line Tracking Sensor Pins
@@ -33,8 +33,8 @@
 #define irMiddlePin A2
 #define crosswalkPin A3
 
-#define obstacleTrigPin D3
-#define obstacleEchoPin D2
+#define obstacleTrigPin 3
+#define obstacleEchoPin 2
 
 // ---------------------------
 // Robot State Machine

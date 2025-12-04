@@ -21,6 +21,7 @@
 #include "BleController.h"
 #include "SensorController.h"
 #include "RobotController.h"
+#include "robot.h"
 
 SensorController sensors;
 RobotController robot;
