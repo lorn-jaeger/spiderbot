@@ -115,54 +115,51 @@ void SensorController::poll() {
     }
 
     // === State Decision Logic ===
+    // Simple 3-sensor line follower:
+    //  - Keep moving forward when center sees the line
+    //  - Bias toward any side that sees the line
+    //  - If nothing is seen, slowly pivot to reacquire
 
-    //TODO: Verify these states
     // Obstacle has highest priority
     if (usO) {
         currentState = OBSTACLE_STOP;
         return;
     }
 
-    if (irC) {
-        currentState = CROSSWALK;
+    const bool anyOnLine = irL || irM || irR;
+    if (!anyOnLine) {
+        currentState = END_OF_ROAD_TURN;  // search turn
         return;
     }
 
-    // Intersection (all three)
-    if ((irL && irM && irR) || (irL && irM && !irR) || (!irL && irM && irR)) {
-        currentState = INTERSECTION;
-        return;
-    }
-
-
-    // Turns
-    if (irL && !irM && !irR) {
-        currentState = TURN_LEFT;
-        return;
-    }  
-
-    if (irR && !irM && !irL) {
-        currentState = TURN_RIGHT;
-        return;
-    }
-
-    // Follow line (middle only)
+    // Centered → forward
     if (irM && !irL && !irR) {
         currentState = FOLLOW_LINE;
         return;
     }
 
-    // Centering (L+R both active)
-    if (irL && irR && !irM) {
-        currentState = FOLLOW_LINE;
+    // Side-only detections steer back onto the line
+    if (irL && !irR) {
+        currentState = TURN_LEFT;
+        return;
+    }
+    if (irR && !irL) {
+        currentState = TURN_RIGHT;
         return;
     }
 
-    // End of road (none)
-    if (!irL && !irM && !irR) {
-        currentState = END_OF_ROAD_TURN;
+    // Mixed detections: favor the side that is active with center
+    if (irM && irL && !irR) {
+        currentState = TURN_LEFT;
         return;
     }
+    if (irM && irR && !irL) {
+        currentState = TURN_RIGHT;
+        return;
+    }
+
+    // All three (or both sides) → treat as centered forward
+    currentState = FOLLOW_LINE;
 
 
 }

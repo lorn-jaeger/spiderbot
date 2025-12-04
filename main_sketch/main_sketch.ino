@@ -78,10 +78,8 @@ void setup() {
 void loop() {
   if (isConnectedBLE && robotReady){
     sensors.poll();
-    updateRobotMotion();
   }else{
     currentState = IDLE;
-    updateRobotMotion();
   }
 
   robot.poll();

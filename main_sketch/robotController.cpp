@@ -15,8 +15,9 @@ enum PulseMode {
 
 PulseMode pulseMode = PULSE_NONE;
 
-unsigned long pulseOnDuration  = 15;   // ms motors ON
-unsigned long pulseOffDuration = 60;   // ms motors OFF
+// Short pulses keep the jerky hex-walker from over-rotating
+unsigned long pulseOnDuration  = 35;   // ms motors ON
+unsigned long pulseOffDuration = 120;  // ms motors OFF
 
 bool pulseOn = false;
 unsigned long pulseEndTime = 0;
@@ -86,22 +87,21 @@ void RobotController::poll() {
 
         case FOLLOW_LINE:
 
-            //pulseMode = PULSE_FORWARD;
-            //pulseMotion();
-            move_forward();
-            startAction(40);
+            pulseMode = PULSE_FORWARD;
+            pulseMotion();
+            startAction(30);
             break;
 
         case TURN_LEFT:
             pulseMode = PULSE_TURN_LEFT;
             pulseMotion();
-            startAction(40);      // turn
+            startAction(30);      // turn
             break;
 
         case TURN_RIGHT:
             pulseMode = PULSE_TURN_RIGHT;
             pulseMotion();
-            startAction(40);      // turn
+            startAction(30);      // turn
             break;
 
         case INTERSECTION:
@@ -125,7 +125,7 @@ void RobotController::poll() {
         case END_OF_ROAD_TURN:
             pulseMode = PULSE_TURN_LEFT;
             pulseMotion();
-            startAction(40);
+            startAction(50);      // slow search turn
             break;
     }
 }
