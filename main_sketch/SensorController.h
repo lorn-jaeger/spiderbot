@@ -31,7 +31,7 @@ private:
     int _thresholdHigh = 2000;
     const float _alpha = 0.3f;
     unsigned long _lastRead = 0;
-    const unsigned long _pollInterval = 40; // 50 Hz
+    const unsigned long _pollInterval = 20; // 50 Hz
 
     long _ultrasonicDuration;
     long _ultrasonicDistance;

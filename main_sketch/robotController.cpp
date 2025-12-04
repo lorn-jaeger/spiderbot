@@ -16,8 +16,8 @@ enum PulseMode {
 PulseMode pulseMode = PULSE_NONE;
 
 // Short pulses keep the jerky hex-walker from over-rotating
-unsigned long pulseOnDuration  = 30;   // ms motors ON
-unsigned long pulseOffDuration = 140;  // ms motors OFF
+unsigned long pulseOnDuration  = 50;   // ms motors ON
+unsigned long pulseOffDuration = 300;  // ms motors OFF
 
 bool pulseOn = false;
 unsigned long pulseEndTime = 0;

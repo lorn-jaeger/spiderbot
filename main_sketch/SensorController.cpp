@@ -57,9 +57,9 @@ void SensorController::readIR(){
 
 bool SensorController::updateIRSensor(IRSensorState &sensor, int pin) {
     int rawValue = analogRead(pin);
-    // Serial.print(pin);
-    // Serial.print(" ");
-    // Serial.println(rawValue);
+    Serial.print(pin);
+    Serial.print(" ");
+    Serial.println(rawValue);
 
     if (!sensor.initialized) {
         sensor.smoothValue = rawValue;
