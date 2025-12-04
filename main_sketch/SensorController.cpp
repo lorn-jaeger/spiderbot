@@ -95,6 +95,25 @@ void SensorController::poll() {
     readIR();
     readUltrasonic();
 
+    static unsigned long lastLog = 0;
+    if (now - lastLog > 200) {
+        lastLog = now;
+        Serial.print("IR L=");
+        Serial.print(_leftSensor.smoothValue);
+        Serial.print(" M=");
+        Serial.print(_middleSensor.smoothValue);
+        Serial.print(" R=");
+        Serial.print(_rightSensor.smoothValue);
+        Serial.print(" | flags L");
+        Serial.print(irL);
+        Serial.print(" M");
+        Serial.print(irM);
+        Serial.print(" R");
+        Serial.print(irR);
+        Serial.print(" | US=");
+        Serial.println(_ultrasonicDistance);
+    }
+
     // === State Decision Logic ===
 
     //TODO: Verify these states

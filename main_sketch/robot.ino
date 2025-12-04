@@ -2,65 +2,100 @@
 // Motor Movement Helper Functions
 // ====================================================
 
-void move_forward(int time) {
-  Serial.println("Moving robot forward");
-  digitalWrite(forwardPin, LOW);
-  digitalWrite(backwardPin, HIGH);
-  digitalWrite(leftTurnPin, HIGH);
-  digitalWrite(rightTurnPin, HIGH);
-  delay(time);
+enum Motion {
+  MOTION_STOP,
+  MOTION_FORWARD,
+  MOTION_FORWARD_LEFT,
+  MOTION_FORWARD_RIGHT,
+  MOTION_TURN_LEFT,
+  MOTION_TURN_RIGHT,
+};
+
+Motion currentMotion = MOTION_STOP;
+
+void applyMotion(Motion motion) {
+  if (motion == currentMotion) return;
+  currentMotion = motion;
+
+  switch (motion) {
+    case MOTION_FORWARD:
+      Serial.println("Motion: forward");
+      digitalWrite(forwardPin, LOW);
+      digitalWrite(backwardPin, HIGH);
+      digitalWrite(leftTurnPin, HIGH);
+      digitalWrite(rightTurnPin, HIGH);
+      break;
+
+    case MOTION_FORWARD_LEFT:
+      Serial.println("Motion: forward + left bias");
+      digitalWrite(forwardPin, LOW);
+      digitalWrite(backwardPin, HIGH);
+      digitalWrite(leftTurnPin, LOW);
+      digitalWrite(rightTurnPin, HIGH);
+      break;
+
+    case MOTION_FORWARD_RIGHT:
+      Serial.println("Motion: forward + right bias");
+      digitalWrite(forwardPin, LOW);
+      digitalWrite(backwardPin, HIGH);
+      digitalWrite(leftTurnPin, HIGH);
+      digitalWrite(rightTurnPin, LOW);
+      break;
+
+    case MOTION_TURN_LEFT:
+      Serial.println("Motion: pivot left");
+      digitalWrite(forwardPin, HIGH);
+      digitalWrite(backwardPin, HIGH);
+      digitalWrite(leftTurnPin, LOW);
+      digitalWrite(rightTurnPin, HIGH);
+      break;
+
+    case MOTION_TURN_RIGHT:
+      Serial.println("Motion: pivot right");
+      digitalWrite(forwardPin, HIGH);
+      digitalWrite(backwardPin, HIGH);
+      digitalWrite(leftTurnPin, HIGH);
+      digitalWrite(rightTurnPin, LOW);
+      break;
+
+    case MOTION_STOP:
+    default:
+      Serial.println("Motion: stop");
+      digitalWrite(forwardPin, HIGH);
+      digitalWrite(backwardPin, HIGH);
+      digitalWrite(leftTurnPin, HIGH);
+      digitalWrite(rightTurnPin, HIGH);
+      break;
+  }
 }
 
-void move_backward(int time) {
-  Serial.println("Moving robot backward");
-  digitalWrite(forwardPin, HIGH);
-  digitalWrite(backwardPin, LOW);
-  digitalWrite(leftTurnPin, HIGH);
-  digitalWrite(rightTurnPin, HIGH);
-  delay(time);
-}
+void updateRobotMotion() {
+  switch (currentState) {
+    case FOLLOW_LINE:
+      applyMotion(MOTION_FORWARD);
+      break;
 
-void move_forward_left(int time) {
-  Serial.println("Moving robot forward and left");
-  digitalWrite(forwardPin, LOW);
-  digitalWrite(backwardPin, HIGH);
-  digitalWrite(leftTurnPin, LOW);
-  digitalWrite(rightTurnPin, HIGH);
-  delay(time);
-}
+    case TURN_LEFT:
+      applyMotion(MOTION_FORWARD_LEFT);
+      break;
 
-void move_forward_right(int time) {
-  Serial.println("Moving robot forward and right");
-  digitalWrite(forwardPin, LOW);
-  digitalWrite(backwardPin, HIGH);
-  digitalWrite(leftTurnPin, HIGH);
-  digitalWrite(rightTurnPin, LOW);
-  delay(time);
-}
+    case TURN_RIGHT:
+      applyMotion(MOTION_FORWARD_RIGHT);
+      break;
 
-void turn_right(int time) {
-  Serial.println("Turning robot right");
-  digitalWrite(forwardPin, HIGH);
-  digitalWrite(backwardPin, HIGH);
-  digitalWrite(leftTurnPin, HIGH);
-  digitalWrite(rightTurnPin, LOW);
-  delay(time);
-}
+    case INTERSECTION:
+      applyMotion(MOTION_FORWARD);
+      break;
 
-void turn_left(int time) {
-  Serial.println("Turning robot left");
-  digitalWrite(forwardPin, HIGH);
-  digitalWrite(backwardPin, HIGH);
-  digitalWrite(leftTurnPin, LOW);
-  digitalWrite(rightTurnPin, HIGH);
-  delay(time);
-}
+    case END_OF_ROAD_TURN:
+      applyMotion(MOTION_TURN_LEFT);
+      break;
 
-void stop_moving(int time) {
-  Serial.println("Stopping robot");
-  digitalWrite(forwardPin, HIGH);
-  digitalWrite(backwardPin, HIGH);
-  digitalWrite(leftTurnPin, HIGH);
-  digitalWrite(rightTurnPin, HIGH);
-  delay(time);
+    case CROSSWALK:
+    case OBSTACLE_STOP:
+    case IDLE:
+    default:
+      applyMotion(MOTION_STOP);
+      break;
+  }
 }
