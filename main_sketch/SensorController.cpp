@@ -114,52 +114,21 @@ void SensorController::poll() {
         Serial.println(_ultrasonicDistance);
     }
 
-    // === State Decision Logic ===
-    // Simple 3-sensor line follower:
-    //  - Keep moving forward when center sees the line
-    //  - Bias toward any side that sees the line
-    //  - If nothing is seen, slowly pivot to reacquire
-
-    // Obstacle has highest priority
-    if (usO) {
-        currentState = OBSTACLE_STOP;
-        return;
-    }
-
-    const bool anyOnLine = irL || irM || irR;
-    if (!anyOnLine) {
-        currentState = END_OF_ROAD_TURN;  // search turn
-        return;
-    }
-
-    // Centered → forward
-    if (irM && !irL && !irR) {
+    // === Simple line-only state logic ===
+    // 1) If center sees the line, keep moving forward in short steps.
+    // 2) If center is off but a side sees the line, pivot toward that side.
+    // 3) If nothing is seen, slow search turn to the left to reacquire.
+    if (irM) {
         currentState = FOLLOW_LINE;
-        return;
-    }
-
-    // Side-only detections steer back onto the line
-    if (irL && !irR) {
+    } else if (irL && !irR) {
         currentState = TURN_LEFT;
-        return;
-    }
-    if (irR && !irL) {
+    } else if (irR && !irL) {
         currentState = TURN_RIGHT;
-        return;
+    } else if (irL && irR) {
+        currentState = FOLLOW_LINE;  // rare case, treat as centered
+    } else {
+        currentState = TURN_LEFT;    // default search turn
     }
-
-    // Mixed detections: favor the side that is active with center
-    if (irM && irL && !irR) {
-        currentState = TURN_LEFT;
-        return;
-    }
-    if (irM && irR && !irL) {
-        currentState = TURN_RIGHT;
-        return;
-    }
-
-    // All three (or both sides) → treat as centered forward
-    currentState = FOLLOW_LINE;
 
 
 }

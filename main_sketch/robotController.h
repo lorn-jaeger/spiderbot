@@ -1,7 +1,6 @@
 #pragma once
 #include <Arduino.h>
 
-
 class RobotController {
 public:
     void begin();
