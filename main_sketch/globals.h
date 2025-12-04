@@ -56,6 +56,9 @@ extern RobotState lastState;
 
 extern bool robotReady;
 
+// Helper for readable debug prints
+const char* stateToString(RobotState s);
+
 // ---------------------------
 // BLE Globals
 // ---------------------------

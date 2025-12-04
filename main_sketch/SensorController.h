@@ -9,6 +9,15 @@ public:
     void begin();
     void poll();
 
+    // Accessors for debug logging
+    bool leftOnLine() const { return irL; }
+    bool middleOnLine() const { return irM; }
+    bool rightOnLine() const { return irR; }
+    long ultrasonicDistance() const { return _ultrasonicDistance; }
+    float leftValue() const { return _leftSensor.smoothValue; }
+    float middleValue() const { return _middleSensor.smoothValue; }
+    float rightValue() const { return _rightSensor.smoothValue; }
+
 private:
 
     struct IRSensorState {

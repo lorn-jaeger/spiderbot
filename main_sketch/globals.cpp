@@ -5,6 +5,20 @@ RobotState currentState = IDLE;
 RobotState lastState = IDLE;
 bool robotReady = false;
 
+const char* stateToString(RobotState s) {
+    switch (s) {
+        case IDLE:             return "IDLE";
+        case FOLLOW_LINE:      return "FOLLOW_LINE";
+        case TURN_LEFT:        return "TURN_LEFT";
+        case TURN_RIGHT:       return "TURN_RIGHT";
+        case INTERSECTION:     return "INTERSECTION";
+        case CROSSWALK:        return "CROSSWALK";
+        case OBSTACLE_STOP:    return "OBSTACLE_STOP";
+        case END_OF_ROAD_TURN: return "END_OF_ROAD_TURN";
+        default:               return "UNKNOWN";
+    }
+}
+
 // BLE objects
 bool isConnectedBLE = false;
 

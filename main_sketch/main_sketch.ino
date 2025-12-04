@@ -82,6 +82,28 @@ void loop() {
     currentState = IDLE;
   }
 
+  // Log state transitions with sensor context for debugging
+  static RobotState lastLoggedState = IDLE;
+  if (currentState != lastLoggedState) {
+    Serial.print("[STATE] ");
+    Serial.print(stateToString(currentState));
+    Serial.print(" | IR L:");
+    Serial.print(sensors.leftOnLine());
+    Serial.print(" M:");
+    Serial.print(sensors.middleOnLine());
+    Serial.print(" R:");
+    Serial.print(sensors.rightOnLine());
+    Serial.print(" | IRv L:");
+    Serial.print(sensors.leftValue(), 1);
+    Serial.print(" M:");
+    Serial.print(sensors.middleValue(), 1);
+    Serial.print(" R:");
+    Serial.print(sensors.rightValue(), 1);
+    Serial.print(" | US:");
+    Serial.println(sensors.ultrasonicDistance());
+    lastLoggedState = currentState;
+  }
+
   robot.poll();
   
   ble.poll();
