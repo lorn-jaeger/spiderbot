@@ -48,15 +48,23 @@ void SensorController::readUltrasonic(){
 }
 
 void SensorController::readIR(){
-  irL = updateIRSensor(_leftSensor, irLeftPin);
-  irM = updateIRSensor(_middleSensor, irMiddlePin);
-  irR = updateIRSensor(_rightSensor, irRightPin);
-  //irC = updateIRSensor(_crosswalkSensor, crosswalkPin);
-
+    irL = updateIRSensor(_leftSensor, irLeftPin);
+    irM = updateIRSensor(_middleSensor, irMiddlePin);
+    irR = updateIRSensor(_rightSensor, irRightPin);
+    //irC = updateIRSensor(_crosswalkSensor, crosswalkPin);
+    Serial.print("IR L:");
+    Serial.print(irL ? 1 : 0);
+    Serial.print(" M:");
+    Serial.print(irM ? 1 : 0);
+    Serial.print(" R:");
+    Serial.println(irR ? 1 : 0);
 }
 
 bool SensorController::updateIRSensor(IRSensorState &sensor, int pin) {
     int rawValue = analogRead(pin);
+    // Serial.print(pin);
+    // Serial.print(" ");
+    // Serial.println(rawValue);
 
     if (!sensor.initialized) {
         sensor.smoothValue = rawValue;

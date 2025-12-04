@@ -1,5 +1,8 @@
 #include "BleController.h"
 #include "globals.h"
+#include <string>
+
+BleController ble;   // <---- global instance
 
 BleController::BleController()
     : uartService("6E400001-B5A3-F393-E0A9-E50E24DCCA9E"),
@@ -34,8 +37,10 @@ void BleController::begin() {
 
 void BleController::send(String msg) {
     if (!isConnected) return;  // no phone → don’t send
+    if(lastSentString == msg) return;
 
     txChar.writeValue((const uint8_t*)msg.c_str(), msg.length());
+    lastSentString = msg;
 }
 
 void BleController::poll() {
@@ -51,7 +56,7 @@ void BleController::poll() {
 
         updateLED();
         handleRX();
-        handleTX();
+        //handleTX();
     }
     else {
         if (isConnected) {

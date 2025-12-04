@@ -52,11 +52,15 @@ enum RobotState {
 
 extern RobotState currentState;
 extern RobotState lastState;
+
+
 extern bool robotReady;
+
 // ---------------------------
 // BLE Globals
 // ---------------------------
 extern bool isConnectedBLE;
+
 
 // ---------------------------
 // Initialization functions

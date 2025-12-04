@@ -1,15 +1,21 @@
 #pragma once
 #include <Arduino.h>
 
+
 class RobotController {
 public:
     void begin();
     void poll();
 
-    // Tunable movement timing
-    void setMovementDelay(int ms) { moveDelay = ms; }
-
 private:
+
+    // timer functions
+    void startAction(unsigned long duration);
+    bool actionDone();
+    unsigned long actionEndTime = 0;
+    bool actionActive = false;
+
+    void pulseMotion();
 
     // helper movement functions
     void move_forward();
@@ -20,5 +26,4 @@ private:
     void turn_right();
     void stop_moving();
 
-    int moveDelay = 10; // in ms
 };

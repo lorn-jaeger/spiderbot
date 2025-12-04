@@ -7,6 +7,8 @@ typedef void (*BleCommandCallback)(char cmd);
 typedef void (*BleConnectCallback)();
 typedef void (*BleDisconnectCallback)();
 
+
+
 class BleController {
 public:
     BleController();
@@ -19,6 +21,8 @@ public:
     void setConnectCallback(BleConnectCallback cb);
     void setDisconnectCallback(BleDisconnectCallback cb);
 
+
+
 private:
     BLEService uartService;
     BLECharacteristic txChar;
@@ -28,12 +32,16 @@ private:
     BleConnectCallback onConnect = nullptr;
     BleDisconnectCallback onDisconnect = nullptr;
 
-    
+    String lastSentString = "";
+
     bool isConnected = false;
     void handleRX();
     void handleTX();
     void updateLED();
     char* robotStateToString();
+
 };
+
+extern BleController ble;
 
 #endif
