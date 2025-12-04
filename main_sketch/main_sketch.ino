@@ -72,7 +72,7 @@ void setup() {
 }
 
 // ====================================================
-// Main Loop
+// Main Loop here
 // ====================================================
 void loop() {
   if (isConnectedBLE && robotReady){
