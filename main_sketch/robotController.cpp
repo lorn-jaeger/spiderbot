@@ -15,9 +15,9 @@ enum PulseMode {
 
 PulseMode pulseMode = PULSE_NONE;
 
-// Short pulses keep the jerky hex-walker from over-rotating
-unsigned long pulseOnDuration  = 50;   // ms motors ON
-unsigned long pulseOffDuration = 300;  // ms motors OFF
+// Tune these to taste
+unsigned long pulseOnDuration  = 150;  // ms motors ON
+unsigned long pulseOffDuration = 80;   // ms motors OFF
 
 bool pulseOn = false;
 unsigned long pulseEndTime = 0;
@@ -71,64 +71,119 @@ void RobotController::pulseMotion() {
 // -------------------------------------------------
 // STATE UPDATER (CALLED IN LOOP)
 // -------------------------------------------------
+// void RobotController::poll() {
+//     // If we are performing a timed motion, wait for it to finish
+//     if (!actionDone()) {
+//         return;  // KEEP LOOP FREE FOR SENSOR READING
+//     }
+//     actionActive = false;
+//     switch (currentState) {
+
+//         case IDLE:
+//             pulseMode = PULSE_NONE;
+//             stop_moving();
+//             startAction(40);
+//             break;
+
+//         case FOLLOW_LINE:
+
+//             pulseMode = PULSE_FORWARD;
+//             pulseMotion();
+//             startAction(40);      // small forward bite
+//             break;
+
+//         case TURN_LEFT:
+//             pulseMode = PULSE_TURN_LEFT;
+//             pulseMotion();
+//             startAction(40);      // gentle pivot
+//             break;
+
+//         case TURN_RIGHT:
+//             pulseMode = PULSE_TURN_RIGHT;
+//             pulseMotion();
+//             startAction(40);      // gentle pivot
+//             break;
+
+//         case INTERSECTION:
+//             pulseMode = PULSE_NONE;
+//             stop_moving();
+//             startAction(40);
+//             break;
+
+//         case CROSSWALK:
+//             pulseMode = PULSE_NONE;
+//             stop_moving();
+//             startAction(40);
+//             break;
+
+//         case OBSTACLE_STOP:
+//             pulseMode = PULSE_NONE;
+//             stop_moving();
+//             startAction(40);
+//             break;
+
+//         case END_OF_ROAD_TURN:
+//             pulseMode = PULSE_TURN_LEFT;
+//             pulseMotion();
+//             startAction(50);      // slow search turn
+//             break;
+//     }
+// }
+
 void RobotController::poll() {
-    // If we are performing a timed motion, wait for it to finish
-    if (!actionDone()) {
-        return;  // KEEP LOOP FREE FOR SENSOR READING
-    }
-    actionActive = false;
+    // Decide what kind of motion we *want* based on currentState.
+    // Then let pulseMotion() handle timing.
+
     switch (currentState) {
 
         case IDLE:
             pulseMode = PULSE_NONE;
+            pulseOn   = false;   // reset pulse state
             stop_moving();
-            startAction(40);
-            break;
+            return;
 
         case FOLLOW_LINE:
-
+            // Go forward as long as both side sensors are 0
             pulseMode = PULSE_FORWARD;
-            pulseMotion();
-            startAction(40);      // small forward bite
             break;
 
         case TURN_LEFT:
+            // One side sees the line → small left correction
             pulseMode = PULSE_TURN_LEFT;
-            pulseMotion();
-            startAction(40);      // gentle pivot
             break;
 
         case TURN_RIGHT:
+            // One side sees the line → small right correction
             pulseMode = PULSE_TURN_RIGHT;
-            pulseMotion();
-            startAction(40);      // gentle pivot
+            break;
+
+        case END_OF_ROAD_TURN:
+            // Slow search turn, still using pulses
+            pulseMode = PULSE_TURN_LEFT;
             break;
 
         case INTERSECTION:
             pulseMode = PULSE_NONE;
             stop_moving();
-            startAction(40);
-            break;
-
+            return;   // no pulses while in INTERSECTION}
         case CROSSWALK:
-            pulseMode = PULSE_NONE;
-            stop_moving();
-            startAction(40);
-            break;
-
         case OBSTACLE_STOP:
+            // For now: full stop in these states
             pulseMode = PULSE_NONE;
+            pulseOn   = false;
             stop_moving();
-            startAction(40);
-            break;
-
-        case END_OF_ROAD_TURN:
-            pulseMode = PULSE_TURN_LEFT;
-            pulseMotion();
-            startAction(50);      // slow search turn
-            break;
+            return;
     }
+
+    // If we want motion, run the pulse state machine every loop.
+    if (pulseMode == PULSE_NONE) {
+        stop_moving();
+        return;
+    }
+
+    pulseMotion();
 }
+
 
 // -------------------------------------------------
 // MOVEMENT HELPERS, do not call directly

@@ -23,7 +23,6 @@ void SensorController::begin() {
     _rightSensor = IRSensorState();
     _crosswalkSensor = IRSensorState();
 }
-
 void SensorController::readUltrasonic(){
 
   //trigger pulse
@@ -40,13 +39,14 @@ void SensorController::readUltrasonic(){
   if(_ultrasonicDuration == 0){
     _ultrasonicDuration = -1;
     _ultrasonicDistance = -1;
+    usO = false;           // <-- clear obstacle when no reading
     return; // no reading
   }
 
-  //return duration / 29 / 2; // in cm
-  _ultrasonicDistance = _ultrasonicDuration / 29 / 2;
+  _ultrasonicDistance = _ultrasonicDuration / 29 / 2; // in cm
   usO  = _ultrasonicDistance <= ULTRASONIC_DISTANCE_THRESHOLD;
 }
+
 
 void SensorController::readIR(){
     irL = updateIRSensor(_leftSensor, irLeftPin);
@@ -81,15 +81,17 @@ bool SensorController::updateIRSensor(IRSensorState &sensor, int pin) {
     return sensor.onLine;
 }
 
+
 void SensorController::poll() {
     unsigned long now = millis();
     if (now - _lastRead < _pollInterval) return;
     _lastRead = now;
-    //Serial.println("polling sensor data...");
+
     // === Read sensors ===
     readIR();
     readUltrasonic();
 
+    // --- Debug logging ---
     static unsigned long lastLog = 0;
     if (now - lastLog > 300) {
         lastLog = now;
@@ -107,52 +109,137 @@ void SensorController::poll() {
         Serial.println("cm");
     }
 
-    // === Simple line-only state logic with noise handling ===
-    // 1) If center sees the line, keep moving forward.
-    // 2) If center is off but a side looks most like the line, pivot that way.
-    // 3) If nothing is clear, continue the last turn direction to avoid ping-pong.
-    static int lastDir = -1; // -1 left, 1 right, 0 center/unknown
+    // =====================================================
+    // STATIC STATE FOR INTERSECTION & LINE RECOVERY
+    // =====================================================
+    static bool intersectionActive = false;           // currently handling an intersection
+    static bool intersectionForwardPhase = false;     // in the 2s "move forward" phase
+    static bool intersectionRearm = false;            // wait until sensors leave intersection before rearming
+    static unsigned long intersectionStart = 0;
+    static unsigned long intersectionForwardStart = 0;
 
-    // Score helpers (lower is better when line is dark, higher is better when bright)
-    auto score = [](float v, bool dark) {
-        return dark ? v : -v;
-    };
+    static unsigned long lastCenterOn = 0;
+    static bool centerInit = false;
+    static int lastDir = 0;    // -1 = left, 1 = right, 0 = straight
+    static int searchDir = 0;  // -1 = left search, 1 = right search, 0 = none
 
-    float sL = score(_leftSensor.smoothValue, LINE_IS_DARK);
-    float sM = score(_middleSensor.smoothValue, LINE_IS_DARK);
-    float sR = score(_rightSensor.smoothValue, LINE_IS_DARK);
+    bool tripleOn = (irL && irM && irR);
 
+    if (!centerInit) {
+        lastCenterOn = now;
+        centerInit = true;
+    }
     if (irM) {
+        // center sensor currently on line → reset timer
+        lastCenterOn = now;
+    }
+
+    // =====================================================
+    // 1) OBSTACLE OVERRIDE: stop immediately
+    // =====================================================
+    if (usO) {
+        currentState = OBSTACLE_STOP;
+        return;
+    }
+
+    // =====================================================
+    // 2) INTERSECTION HANDLING
+    //    - Phase 1: stop for 5 seconds when L,M,R all 1
+    //    - Phase 2: move straight forward for 2 seconds
+    //    - Then re-arm only after we've left the intersection
+    // =====================================================
+
+    // If we're in the middle of an intersection sequence:
+    if (intersectionActive) {
+        if (!intersectionForwardPhase) {
+            // Phase 1: 5-second stop
+            if (now - intersectionStart < 5000UL) {   // 5 seconds
+                currentState = INTERSECTION;          // RobotController should stop_moving() here
+                return;
+            } else {
+                // start Phase 2: 2s forward
+                intersectionForwardPhase = true;
+                intersectionForwardStart = now;
+            }
+        }
+
+        if (intersectionForwardPhase) {
+            if (now - intersectionForwardStart < 2000UL) { // 2 seconds forward
+                // Force straight motion, ignore side sensors during this phase
+                currentState = FOLLOW_LINE;
+                return;
+            } else {
+                // Intersection sequence fully done
+                intersectionActive = false;
+                intersectionForwardPhase = false;
+                intersectionRearm = true;   // don't trigger intersection again until we leave it
+
+                // Reset "lost center" timer so we don't instantly go into search mode
+                lastCenterOn = now;
+                searchDir = 0;
+                lastDir = 0;
+                // fall through to normal behavior
+            }
+        }
+    }
+
+    // Re-arm intersection detection only after we've left the 3-sensors-on region
+    if (intersectionRearm && !tripleOn) {
+        intersectionRearm = false;
+    }
+
+    // Detect a NEW intersection if not in a sequence and armed
+    if (!intersectionActive && !intersectionRearm && tripleOn) {
+        intersectionActive = true;
+        intersectionForwardPhase = false;
+        intersectionStart = now;
+        currentState = INTERSECTION;   // will stop for 5 seconds
+        return;
+    }
+
+    // =====================================================
+    // 3) "LOST LINE" RECOVERY:
+    //    If center hasn't seen line for 2s, search in opposite direction
+    // =====================================================
+    const unsigned long NO_CENTER_TIMEOUT = 2000UL; // 2 seconds
+    unsigned long sinceCenter = now - lastCenterOn;
+
+    if (sinceCenter > NO_CENTER_TIMEOUT) {
+        // Choose opposite of last turn; if unknown, default to turning right.
+        if (searchDir == 0) {
+            if (lastDir < 0)       searchDir = 1;   // was turning left → search right
+            else if (lastDir > 0)  searchDir = -1;  // was turning right → search left
+            else                   searchDir = 1;   // no history → just pick right
+        }
+
+        currentState = (searchDir < 0) ? TURN_LEFT : TURN_RIGHT;
+        return;
+    } else {
+        // Back in normal tracking window, disable search
+        searchDir = 0;
+    }
+
+    // =====================================================
+    // 4) NORMAL LINE-FOLLOWING USING ONLY LEFT & RIGHT
+    //    (middle sensor only used for the 2s timer above)
+    // =====================================================
+    if (!irL && !irR) {
         currentState = FOLLOW_LINE;
         lastDir = 0;
-        return;
     }
-
-    // One side sees the line → steer that way
-    if (irL && !irR) {
+    else if (irL && !irR) {
         currentState = TURN_LEFT;
         lastDir = -1;
-        return;
     }
-    if (irR && !irL) {
+    else if (irR && !irL) {
         currentState = TURN_RIGHT;
         lastDir = 1;
-        return;
     }
-
-    // No clean detections: compare which side looks more "line-like"
-    if (!irL && !irR) {
-        int bestDir = (sL < sR) ? -1 : 1;
-        if (lastDir != 0) {
-            bestDir = lastDir; // stick with previous lean to avoid flip-flop
-        }
-        currentState = (bestDir < 0) ? TURN_LEFT : TURN_RIGHT;
-        lastDir = bestDir;
-        return;
+    else {
+        // both side sensors see line → treat as centered
+        currentState = FOLLOW_LINE;
+        lastDir = 0;
     }
-
-    // Both side sensors think they're on the line (likely noise) → treat as centered
-    currentState = FOLLOW_LINE;
-    lastDir = 0;
-
 }
+
+
