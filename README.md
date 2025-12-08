@@ -23,7 +23,7 @@ No additional third-party libraries are required.
 2) Install the ESP32 board package:
    - Arduino IDE -> Tools -> Board -> Boards Manager
    - Search: "ESP32"
-   - Install: "esp32 by Espressif Systems"
+   - Install: "Arduino ESP32 Boards" by Arduino. Specifically version 2.0.18-arduino.5
 
 3) Select the correct board:
    - Tools -> Board
